@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>الفيديوهات - منصة THE BEST</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #0d0d0d;
+      color: #fff;
+      margin: 0;
+      padding: 15px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      color: #ffd700;
+      font-size: 1.6rem;
+      margin: 0;
+      font-weight: 900;
+      text-align: center;
+      flex-grow: 1;
+    }
+
+    #back {
+      background: rgba(255, 215, 0, 0.1);
+      border: 1.5px solid #ffd700;
+      color: #ffd700;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: 0.3s;
+      margin-left: 5px;
+    }
+
+    #back:hover {
+      background: rgba(255, 215, 0, 0.2);
+      transform: translateY(-1px);
+    }
+
+    #videos-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .video-box {
+      background: #1a1a1a;
+      border: 1px solid rgba(255, 215, 0, 0.15);
+      border-radius: 12px;
+      padding: 12px;
+      transition: 0.3s;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(255,215,0,0.05);
+    }
+
+    .video-box:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0 18px rgba(255,215,0,0.25);
+    }
+
+    .video-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .thumb {
+      background: #000;
+      border-radius: 10px;
+      height: 160px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .thumb::after {
+      content: "▶";
+      position: absolute;
+      font-size: 40px;
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .thumb:hover::after {
+      transform: scale(1.1);
+    }
+
+    .loading, .error {
+      text-align: center;
+      color: #ffd700;
+      font-size: 17px;
+      padding: 20px;
+    }
+
+    footer {
+      text-align: center;
+      color: #888;
+      margin-top: 35px;
+      font-size: 0.85rem;
+      border-top: 1px solid rgba(255, 215, 0, 0.1);
+      padding-top: 15px;
+    }
+
+    footer span {
+      color: #ffd700;
+    }
+
+    /* ✅ نافذة اختيار الجودات */
+    .popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      display: none;
+    }
+
+    .popup-content {
+      background: #1a1a1a;
+      border: 2px solid #ffd700;
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      width: 300px;
+      box-shadow: 0 0 20px rgba(255,215,0,0.2);
+    }
+
+    .popup-content h3 {
+      color: #ffd700;
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+
+    .quality-btn {
+      display: block;
+      background: #ffd700;
+      color: #000;
+      border: none;
+      padding: 10px 15px;
+      margin: 8px auto;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+      width: 80%;
+    }
+
+    .quality-btn:hover {
+      background: #e6c200;
+      transform: translateY(-2px);
+    }
+
+    .cancel-btn {
+      margin-top: 10px;
+      background: none;
+      border: 1px solid #ffd700;
+      color: #ffd700;
+      padding: 8px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .cancel-btn:hover {
+      background: rgba(255,215,0,0.1);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <button id="back">⬅ رجوع</button>
+    <h1>𝑽𝒊𝒅𝒆𝒐 𝑳𝒊𝒃𝒓𝒂𝒓𝒚</h1>
+    <div style="width:35px;"></div>
+  </header>
+
+  <main>
+    <div id="videos-container">
+      <div class="loading">⏳....𝑳𝒐𝒂𝒅𝒊𝒏𝒈</div>
+    </div>
+  </main>
+
+  <footer>
+    © جميع الحقوق محفوظة لمنصة <span>THE BEST</span> 🔥
+  </footer>
+
+  <!-- ✅ نافذة اختيار الجوده -->
+  <div id="popup" class="popup">
+    <div class="popup-content">
+      <h3>اختر الجودة 🎥</h3>
+      <div id="quality-options"></div>
+      <button class="cancel-btn" onclick="closePopup()">إلغاء</button>
+    </div>
+  </div>
+
+ <script src="app.js"></script>  <!-- أو المسار المناسب للملف -->
+
+  <script src="check_code.js"></script>
+  
+
+<script type="module">
+const videosContainer = document.getElementById("videos-container");
+const backBtn = document.getElementById("back");
+
+// جلب البيانات من localStorage
+const selectedSubject = JSON.parse(localStorage.getItem("selected_subject"));
+const selectedTeacher = JSON.parse(localStorage.getItem("selected_teacher"));
+const selectedChapter = JSON.parse(localStorage.getItem("selected_chapter"));
+const selectedLecture = JSON.parse(localStorage.getItem("selected_lecture"));
+
+// زر العودة
+backBtn.onclick = () => {
+  window.location.href = 'lecture_name-a.html';
+};
+
+function normalize(str) {
+  return (str || "").trim().replace(/[\s.\-ـ_]/g, "").toLowerCase();
+}
+
+async function loadVideos() {
+  if (!selectedSubject || !selectedTeacher || !selectedChapter || !selectedLecture) {
+    videosContainer.innerHTML = "<p>⚠️ لم يتم تحديد المادة أو المدرس أو الفصل أو المحاضرة.</p>";
+    return;
+  }
+
+  try {
+    const res = await fetch("organized_output-a.json");
+    const data = await res.json();
+
+    const wantedSubject = normalize(selectedSubject.name);
+    const wantedTeacher = normalize(selectedTeacher.name);
+    const wantedChapter = normalize(selectedChapter.name);
+    const wantedLecture = normalize(selectedLecture.name);
+
+    let foundLecture = null;
+
+    (data || []).forEach(year => {
+      (year.subjects || []).forEach(sub => {
+        if (normalize(sub.name) === wantedSubject) {
+          (sub.teachers || []).forEach(t => {
+            if (normalize(t.name) === wantedTeacher) {
+              (t.chapters || []).forEach(ch => {
+                if (normalize(ch.name) === wantedChapter) {
+                  (ch.lectures || []).forEach(lec => {
+                    if (normalize(lec.name) === wantedLecture) {
+                      foundLecture = lec;
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+
+    if (!foundLecture || !foundLecture.videos?.length) {
+      videosContainer.innerHTML = "<p>⚠️ لا توجد فيديوهات لهذه المحاضرة.</p>";
+      return;
+    }
+
+    // عرض الفيديوهات مباشرة بدون popup
+    foundLecture.videos.forEach((video, index) => {
+      const div = document.createElement("div");
+      div.className = "video-box";
+
+      const title = document.createElement("div");
+      title.className = "video-title";
+      title.textContent = `فيديو ${index + 1}: ${video.title || "بدون اسم"}`;
+
+      const thumb = document.createElement("div");
+      thumb.className = "thumb";
+     thumb.onclick = () => {
+  // جلب رابط الفيديو من stream_url
+  const videoLink = video.stream_url;
+  if (!videoLink) {
+    alert("⚠️ لا يوجد رابط لهذا الفيديو");
+    return;
+  }
+  
+  // تخزين الرابط والشكل المطلوب للمشغل
+  localStorage.setItem("video_sources", JSON.stringify([
+    { src: videoLink, type: "application/x-mpegURL" }
+  ]));
+  localStorage.setItem("video_title", video.title || `فيديو`);
+
+  // الانتقال مباشرة إلى صفحة المشغل
+  window.location.href = 'player.html';
+};
+
+
+
+
+      div.appendChild(title);
+      div.appendChild(thumb);
+      videosContainer.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error(err);
+    videosContainer.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الفيديوهات.</p>";
+  }
+}
+
+loadVideos();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' /api/">
+<title>تسجيل الدخول | الثانوية بلس بريميوم</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Cairo', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #3f1f85;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Login Box */
+  .login-box {
+    position: relative;
+    background: #1a0a3d;
+    border-radius: 25px;
+    padding: 50px 35px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    text-align: center;
+    margin: auto;
+  }
+
+  .login-box h2 {
+    color: #ffcb42;
+    font-size: 32px;
+    margin-bottom: 15px;
+  }
+  .login-box p {
+    color: #eee;
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+  .login-box input {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    border: 2px solid #ffcb42;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 18px;
+    text-align: center;
+    outline: none;
+    transition: 0.3s;
+  }
+  .login-box input:focus {
+    border-color: #fff;
+    box-shadow: 0 0 10px #ffcb42;
+    background: rgba(255,255,255,0.15);
+  }
+  .login-box button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    background: #ffcb42;
+    color: #3f1f85;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .login-box button:hover {
+    background: #ff9f00;
+  }
+  .login-box button:disabled {
+    background: #666;
+    cursor: not-allowed;
+  }
+
+ .info-details {
+  color: #ffd976;
+  font-size: 18px;
+  margin-top: 12px;
+  line-height: 1.9;
+  background: rgba(255, 217, 118, 0.08);
+  padding: 12px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 217, 118, 0.25);
+  backdrop-filter: blur(3px);
+}
+.info-details b {
+  color: #ffe9a3;
+} 
+
+  /* Loader */
+  .loader {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,203,66,0.3);
+    border-top-color: #ffcb42;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    vertical-align: middle;
+    margin-left: 5px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .result { margin-top: 15px; font-size: 16px; line-height: 1.6; }
+  .success { color: #4ade80; }
+  .error { color: #f87171; }
+  
+  .lockout-warning {
+    background: rgba(248, 113, 113, 0.2);
+    border: 1px solid #f87171;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    color: #f87171;
+    font-size: 14px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="login-box">
+  <h2>🔐 تسجيل الدخول</h2>
+  <p>من فضلك أدخل رمز الدخول الخاص بك</p>
+  <div id="lockoutWarning" class="lockout-warning" style="display: none;"></div>
+  <input type="text" id="code" placeholder="أدخل الكود المكون من ٩ أرقام" maxlength="9" autocomplete="off">
+  <button id="loginBtn">تسجيل الدخول</button>
+  <div class="result" id="result"></div>
+</div>
+
+<script src="app.js"></script>
+<script src="secure-auth.js"></script>
+
+<script>
+// Secure authentication module
+const SecureAuth = {
+  API_URL: "/api/auth",
+  
+  // Generate secure device fingerprint
+  async getDeviceFingerprint() {
+    const components = [
+      navigator.userAgent,
+      navigator.language,
+      screen.width + "x" + screen.height,
+      new Date().getTimezoneOffset(),
+      navigator.hardwareConcurrency || 0
+    ];
+    
+    const data = components.join("|");
+    const encoder = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(data));
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  },
+  
+  // Store session securely
+  setSession(sessionData) {
+    // Use sessionStorage instead of localStorage for sensitive data
+    sessionStorage.setItem("session_token", sessionData.sessionToken);
+    sessionStorage.setItem("session_expires", sessionData.expiresAt);
+    
+    // Only store non-sensitive user info in localStorage
+    if (sessionData.user) {
+      localStorage.setItem("user_name", sessionData.user.name);
+      localStorage.setItem("user_section", sessionData.user.section);
+    }
+  },
+  
+  getSessionToken() {
+    const token = sessionStorage.getItem("session_token");
+    const expires = parseInt(sessionStorage.getItem("session_expires"), 10);
+    
+    if (!token || !expires || Date.now() > expires) {
+      this.clearSession();
+      return null;
+    }
+    
+    return token;
+  },
+  
+  clearSession() {
+    sessionStorage.removeItem("session_token");
+    sessionStorage.removeItem("session_expires");
+    localStorage.removeItem("user_name");
+    localStorage.removeItem("user_section");
+    localStorage.removeItem("user_code");
+    localStorage.removeItem("user_data");
+  },
+  
+  isAuthenticated() {
+    return !!this.getSessionToken();
+  },
+  
+  // Login with rate limit awareness
+  async login(code) {
+    const deviceId = await this.getDeviceFingerprint();
+    
+    const response = await fetch(this.API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        action: "login",
+        code: code,
+        deviceId: deviceId
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error("TOO_MANY_ATTEMPTS");
+      }
+      throw new Error(data.error || "Login failed");
+    }
+    
+    if (data.success && data.sessionToken) {
+      this.setSession(data);
+    }
+    
+    return data;
+  },
+  
+  async logout() {
+    const token = this.getSessionToken();
+    
+    if (token) {
+      try {
+        await fetch(this.API_URL + "?action=logout", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + token
+          }
+        });
+      } catch (e) {
+        console.warn("Logout request failed");
+      }
+    }
+    
+    this.clearSession();
+  }
+};
+
+// UI Functions
+function showToast(message, type = "error", duration = 4000) {
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.innerText = message;
+  document.body.appendChild(toast);
+
+  Object.assign(toast.style, {
+    position: "fixed",
+    bottom: "30px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    padding: "15px 25px",
+    background: type === "success" ? "#4ade80" : "#f87171",
+    color: "#fff",
+    fontSize: "16px",
+    borderRadius: "10px",
+    boxShadow: "0 5px 20px rgba(0,0,0,0.3)",
+    zIndex: 9999,
+    opacity: 0,
+    transition: "opacity 0.5s ease, bottom 0.5s ease"
+  });
+
+  setTimeout(() => { toast.style.opacity = 1; toast.style.bottom = "50px"; }, 50);
+
+  setTimeout(() => {
+    toast.style.opacity = 0;
+    toast.style.bottom = "30px";
+    setTimeout(() => toast.remove(), 500);
+  }, duration);
+}
+
+async function handleLogin() {
+  const code = document.getElementById("code").value.trim();
+  const resultDiv = document.getElementById("result");
+  const btn = document.getElementById("loginBtn");
+  const lockoutWarning = document.getElementById("lockoutWarning");
+  
+  resultDiv.innerHTML = "";
+  lockoutWarning.style.display = "none";
+  
+  // Input validation
+  if (!code) {
+    resultDiv.innerHTML = "<span class='error'>⚠ من فضلك أدخل الكود.</span>";
+    return;
+  }
+  
+  // Validate code format (9 digits only)
+  if (!/^\d{9}$/.test(code)) {
+    resultDiv.innerHTML = "<span class='error'>⚠ الكود يجب أن يكون ٩ أرقام فقط.</span>";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = `جارٍ التحقق <span class="loader"></span>`;
+
+  try {
+    const data = await SecureAuth.login(code);
+    
+    if (data.success) {
+      resultDiv.innerHTML = `
+        <div class="success">✅ تم تسجيل الدخول بنجاح</div>
+        <div class="info-details">
+          الاسم: <b>${data.user.name}</b><br>
+          الشعبة: <b>${data.user.section}</b><br>
+          الانتهاء: <b>${data.user.endDate}</b><br>
+          الحالة: <b>نشط</b>
+        </div>
+      `;
+
+      // Determine redirect based on section
+      const section = (data.user.section || "").trim();
+      let targetPage = "year.html";
+
+      if (section.includes("أدبي")) {
+        targetPage = "year-a.html";
+      }
+
+      setTimeout(() => {
+        window.location.href = targetPage;
+      }, 1000);
+
+    } else {
+      resultDiv.innerHTML = `<span class='error'>${data.message || "فشل تسجيل الدخول"}</span>`;
+    }
+
+  } catch (err) {
+    console.error("Login error:", err);
+    
+    if (err.message === "TOO_MANY_ATTEMPTS") {
+      lockoutWarning.style.display = "block";
+      lockoutWarning.innerHTML = "⚠ محاولات كثيرة جداً. الرجاء الانتظار 15 دقيقة.";
+      resultDiv.innerHTML = "<span class='error'>⛔ تم حظر المحاولات مؤقتاً</span>";
+    } else {
+      resultDiv.innerHTML = "<span class='error'>⚠ حدث خطأ أثناء الاتصال بالخادم.</span>";
+    }
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = "تسجيل الدخول";
+}
+
+// Event listeners
+document.getElementById("loginBtn").addEventListener("click", handleLogin);
+document.getElementById("code").addEventListener("keypress", e => {
+  if (e.key === "Enter") handleLogin();
+});
+
+// Check if already authenticated
+window.onload = function() {
+  if (SecureAuth.isAuthenticated()) {
+    const section = localStorage.getItem("user_section") || "";
+    const targetPage = section.includes("أدبي") ? "year-a.html" : "year.html";
+    window.location.href = targetPage;
+  }
+};
+</script>
+
+</body>
+</html>

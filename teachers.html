@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>المدرسون - منصة THE BEST</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: #121212;
+    color: #fff;
+    padding: 80px 15px 30px;
+    margin: 0;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ===== الشريط العلوي ===== */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #111;
+    padding: 10px 15px;
+    color: white;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1000;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .menu-btn {
+    font-size: 22px;
+    cursor: pointer;
+  }
+
+  .title {
+    font-size: 14px;
+    color: #f36;
+  }
+
+  .icons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .icons img {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+  }
+
+  .toggle-dark {
+    background: #fff;
+    border-radius: 12px;
+    width: 40px;
+    height: 20px;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .toggle-dark::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #111;
+    border-radius: 50%;
+    transition: 0.3s;
+  }
+
+  .toggle-dark.active::after {
+    left: 22px;
+    background: #ff0;
+  }
+
+  /* ===== باقي التنسيقات ===== */
+  h1 {
+    color: #ffd700;
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 0 0 8px #ffd700;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  li {
+    background:#1a1a1a;
+    margin:15px 0;
+    padding:15px;
+    border-radius:12px;
+    cursor:pointer;
+    text-align:center;
+    font-weight:bold;
+    color:#ffd700;
+    transition: background 0.3s, transform 0.3s;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    overflow:hidden;
+  }
+
+  li:hover {
+    background:#333;
+    transform: translateY(-5px);
+  }
+
+  .subject-img {
+    width:100%;
+    height:150px;
+    object-fit:cover;
+    border-radius:10px;
+    margin-bottom:12px;
+  }
+
+  .teacher-circle {
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    background:#222;
+    border:3px solid #ffd700;
+    overflow:hidden;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .teacher-circle img {
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    border-radius:50%;
+  }
+
+  li span {
+    font-size:1.1rem;
+    color:#ffd700;
+  }
+
+  /* ===== Toast إشعار ===== */
+  #toast {
+    visibility: hidden;
+    min-width: 260px;
+    background: #1e1e1e;
+    color: #ffd700;
+    text-align: center;
+    border-radius: 12px;
+    padding: 14px;
+    position: fixed;
+    z-index: 2000;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.5s, bottom 0.5s;
+  }
+  #toast.show {
+    visibility: visible;
+    opacity: 1;
+    bottom: 50px;
+  }
+
+  /* ===== الوضع الفاتح ===== */
+  body.light-mode {
+    background: #f5f5f5;
+    color: #000;
+  }
+  body.light-mode .topbar {
+    background: #fff;
+    color: #000;
+  }
+  body.light-mode li {
+    background: #fff;
+    color: #000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  }
+  body.light-mode #toast {
+    background: #fff;
+    color: #333;
+  }
+</style>
+</head>
+<body>
+
+  <!-- ✅ الشريط العلوي -->
+  <div class="topbar">
+    <div class="menu-btn" onclick="window.location.href='subjects.html'">⬅</div>
+    <div class="title">𝑺𝒖𝒃𝒋𝒆𝒄𝒕 𝑻𝒆𝒂𝒄𝒉𝒆𝒓𝒔</div>
+    <div class="icons">
+      <div class="toggle-dark" id="darkToggle"></div>
+      <a href="" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" alt="WhatsApp">
+      </a>
+      <img id="shareBtn" src="https://cdn-icons-png.flaticon.com/512/929/929610.png" alt="Share">
+      <img id="notifyBtn" src="https://cdn-icons-png.flaticon.com/512/1827/1827272.png" alt="Notification">
+    </div>
+  </div>
+
+  <!-- ✅ Toast -->
+  <div id="toast">الإشعارات هتتفعل قريبًا 🔔✨</div>
+
+  <h1>𝑺𝒖𝒃𝒋𝒆𝒄𝒕 𝑻𝒆𝒂𝒄𝒉𝒆𝒓𝒔</h1>
+  <ul id="teachers-list">
+    <li>⏳....𝑳𝒐𝒂𝒅𝒊𝒏𝒈</li>
+  </ul>
+
+   <script src="app.js"></script>  <!-- أو المسار المناسب للملف -->
+
+  <script src="check_code.js"></script>
+
+
+<script type="module">
+const teachersList = document.getElementById('teachers-list');
+
+// 🧩 صور المواد
+const subjectImages = {
+  "أحياء": "https://www2.0zz0.com/2025/11/03/16/425588580.jpg",
+  "فيزياء": "https://www2.0zz0.com/2025/11/03/16/155373686.jpg",
+  "كيمياء": "https://www2.0zz0.com/2025/11/03/16/286845048.jpg",
+  "لغة عربية": "https://www2.0zz0.com/2025/11/06/06/128992456.jpg",
+  "English": "https://www2.0zz0.com/2025/11/03/16/386429473.jpg",
+  "جيولوجيا": "https://www2.0zz0.com/2025/11/03/22/343667596.jpg",
+  "الرياضيات": "https://www2.0zz0.com/2025/11/03/22/428968592.jpg",
+  "ادبي": "https://www2.0zz0.com/2025/10/01/19/580067879.jpeg"
+};
+
+// جلب المادة المختارة من LocalStorage
+const selectedSubject = JSON.parse(localStorage.getItem("selected_subject"));
+if (!selectedSubject) {
+  teachersList.innerHTML = '<li>⚠️ لم يتم اختيار مادة</li>';
+} else {
+  loadTeachers();
+}
+
+// تحميل المدرسين
+async function loadTeachers() {
+  try {
+    const res = await fetch('organized_output.json'); // نفس ملف البيانات
+    const data = await res.json();
+
+    // جلب السنة المختارة
+    const selectedYear = JSON.parse(localStorage.getItem('selected_year'));
+    const year = data.find(y => y.id === selectedYear.id || y.name === selectedYear.name);
+    if (!year) return;
+
+    // البحث عن المادة
+    const subjectName = selectedSubject.name;
+    const sub = year.subjects.find(s => s.name === subjectName);
+    if (!sub || !sub.teachers?.length) {
+      teachersList.innerHTML = '<li>لا يوجد مدرسون لهذه المادة.</li>';
+      return;
+    }
+
+    teachersList.innerHTML = '';
+
+    sub.teachers.forEach(teacher => {
+      const li = document.createElement('li');
+
+      // صورة المادة
+      const subjectImg = document.createElement('img');
+      subjectImg.className = 'subject-img';
+      subjectImg.src = selectedSubject.image_url || "https://img.icons8.com/fluency/300/book.png";
+      subjectImg.alt = subjectName;
+
+      // صورة المدرس
+      const circle = document.createElement('div');
+      circle.className = 'teacher-circle';
+      const teacherImg = document.createElement('img');
+      teacherImg.src = teacher.image_url || "https://img.icons8.com/ios-filled/100/ffd700/user-male-circle.png";
+      teacherImg.alt = teacher.name;
+      circle.appendChild(teacherImg);
+// اسم المدرس
+const nameSpan = document.createElement('span');
+nameSpan.textContent = teacher.name;
+
+// عدد الفصول أسفل الاسم
+const chaptersCount = document.createElement('div');
+chaptersCount.style.fontSize = '0.85rem';
+chaptersCount.style.color = '#ffd700';
+chaptersCount.textContent = `${teacher.chapters?.length || 0} 𝑪𝒉𝒂𝒑𝒕𝒆𝒓`;
+
+li.appendChild(subjectImg);
+li.appendChild(circle);
+li.appendChild(nameSpan);
+li.appendChild(chaptersCount);
+
+
+      // الانتقال لصفحة الفصول
+      li.onclick = () => {
+        localStorage.setItem('selected_teacher', JSON.stringify(teacher));
+        window.location.href = 'chapters.html';
+      };
+
+      teachersList.appendChild(li);
+    });
+
+  } catch (err) {
+    console.error(err);
+    teachersList.innerHTML = '<li>❌ حدث خطأ أثناء تحميل البيانات.</li>';
+  }
+}
+
+// 🌙 الوضع الليلي والإشعارات
+const toast = document.getElementById('toast');
+const notifyBtn = document.getElementById('notifyBtn');
+const darkToggle = document.getElementById('darkToggle');
+
+notifyBtn?.addEventListener('click', () => {
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+});
+
+darkToggle?.addEventListener('click', () => {
+  document.body.classList.toggle('light-mode');
+  darkToggle.classList.toggle('active');
+});
+</script>
+</body>
+</html>

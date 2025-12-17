@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚠️ Access Error</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #1a1a1a;
+    color: #ffd700;
+    font-family: 'Cairo', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+    flex-direction: column;
+  }
+
+  .error-box {
+    background: #000;
+    border: 2px solid #ffd700;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px #ffd70044;
+    max-width: 90%;
+  }
+
+  .error-box h1 {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+
+  .json-output {
+    background: #111;
+    color: #00ff00;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+  <div class="error-box">
+    <h1>⚠️ Access Error</h1>
+    <div class="json-output">
+      {"error":"App Only Access"}
+    </div>
+  </div>
+</body>
+</html>

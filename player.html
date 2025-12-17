@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.plyr.io https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.plyr.io https://fonts.googleapis.com; font-src https://fonts.gstatic.com; media-src 'self' blob: https:; connect-src 'self' /api/ https:;">
+  <title>تشغيل الفيديو - منصة THE BEST</title>
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <script src="secure-auth.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: radial-gradient(circle at top, #0a0a0a, #000);
+      color: #fff;
+      margin: 0;
+      text-align: center;
+      overflow-x: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #111;
+      padding: 14px 18px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+    }
+
+    .title {
+      color: #ffd700;
+      font-weight: 700;
+      font-size: 18px;
+      text-shadow: 0 0 8px #ffd700;
+    }
+
+    .back {
+      font-size: 22px;
+      cursor: pointer;
+      color: #ffd700;
+      transition: transform 0.3s;
+      user-select: none;
+    }
+
+    .back:hover {
+      transform: translateX(-5px);
+    }
+
+    #player {
+      max-width: 950px;
+      width: 100%;
+      height: 60vh;
+      border-radius: 18px;
+      margin: 25px auto;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+      background: #000;
+    }
+
+    #hint {
+      margin-top: 12px;
+      color: #ffd700;
+      font-size: 14px;
+      text-shadow: 0 0 4px #ffd700;
+    }
+
+    .error-msg {
+      margin: 40px auto;
+      color: #ff4d4d;
+      font-size: 20px;
+      font-weight: 700;
+      text-shadow: 0 0 8px #ff0000;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <div class="back" onclick="history.back()">⬅</div>
+    <div class="title">𝑷𝒍𝒂𝒚 𝑽𝒊𝒅𝒆𝒐 🎬</div>
+    <div style="width:25px;"></div>
+  </div>
+
+  <video id="player" playsinline controls poster="poster.jpg"></video>
+  <div id="hint">💡 اسحب الفيديو لتقديمه أو تأخيره على الهاتف</div>
+
+  <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <script>
+    // Verify authentication before playing video
+    (async function () {
+      const isAuth = await SecureAuth.protectPage("index.html");
+      if (!isAuth) return;
+      SecureAuth.startSessionMonitor(60000);
+    })();
+
+    let qualitySources = [];
+    let videoTitle = sessionStorage.getItem("video_title") || "Lecture Video";
+    const savedSources = sessionStorage.getItem("video_sources");
+
+    if (savedSources) {
+      try {
+        const videoData = JSON.parse(savedSources);
+
+        // إذا كان الفيديو مخزن كمصفوفة (معظم الأحيان هتكون عنصر واحد)
+        if (Array.isArray(videoData)) {
+          qualitySources = videoData.map(v => ({
+            src: v.stream_url || v.src || v,  // استخدام stream_url أولًا
+            type: "application/x-mpegURL",
+            size: parseInt(v.label) || 720
+          }));
+        } else {
+          qualitySources = [{
+            src: videoData.stream_url || videoData.src || videoData,
+            type: "application/x-mpegURL",
+            size: parseInt(videoData.label) || 720
+          }];
+        }
+
+      } catch (err) {
+        console.error("❌ Error parsing savedSources:", err);
+      }
+    } else {
+      document.body.innerHTML = "<div class='error-msg'>لم يتم تحديد رابط الفيديو 😢</div>";
+    }
+
+    // إنشاء المشغل مع أزرار مدمجة
+    const player = new Plyr('#player', {
+      controls: [
+        'play-large', 'play', 'rewind', 'fast-forward', 'progress', 'current-time', 'duration',
+        'mute', 'volume', 'settings', 'fullscreen'
+      ],
+      settings: ['quality', 'speed', 'loop'],
+      rewindTime: 10,
+      forwardTime: 10
+    });
+
+    // تشغيل HLS إذا كان الفيديو بصيغة m3u8
+    if (qualitySources.length > 0) {
+      const firstSrc = qualitySources[0].src;
+      if (typeof firstSrc === "string" && firstSrc.endsWith(".m3u8") && Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(firstSrc);
+        hls.attachMedia(document.getElementById('player'));
+      } else {
+        player.source = {
+          type: 'video',
+          title: videoTitle,
+          sources: qualitySources
+        };
+      }
+    }
+
+    // 🔄 Fullscreen وتدوير تلقائي عند التشغيل
+    player.on('play', async () => {
+      try {
+        if (!player.fullscreen.active) player.fullscreen.enter();
+        if (screen.orientation && screen.orientation.lock) {
+          await screen.orientation.lock('landscape');
+          console.log("📱 تم تفعيل الوضع الأفقي تلقائياً");
+        }
+      } catch (err) {
+        console.warn("⚠️ لا يمكن تفعيل التدوير التلقائي:", err);
+      }
+    });
+
+    // ⏰ نهاية الفيديو
+    player.on('ended', () => {
+      alert("🎬 انتهى الفيديو");
+    });
+
+    // رسالة تلميحية للمستخدم (مخفية بعد 5 ثواني)
+    setTimeout(() => document.getElementById('hint').style.display = 'none', 5000);
+  </script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الملف الشخصي | الثانوية بلس بريميوم</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700&family=Orbitron:wght@600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --primary: #6A11CB;
+    --secondary: #2575FC;
+    --accent: #00F5C4;
+    --error: #FF4F4F;
+    --success: #00C896;
+    --dark: #0F0F1B;
+    --darker: #1A1A2E;
+    --light: #FFFFFF;
+    --gray: #A0A0B0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: linear-gradient(135deg, var(--darker), var(--dark));
+    color: var(--light);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+  }
+
+  .profile-container {
+    background: rgba(26, 26, 46, 0.95);
+    border-radius: 20px;
+    padding: 25px 20px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 12px 25px rgba(0,0,0,0.4);
+    text-align: center;
+  }
+
+  .profile-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    margin: auto;
+    border: 2px solid var(--accent);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.6rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+
+  .profile-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .profile-phone {
+    font-size: 0.9rem;
+    color: var(--gray);
+    margin-bottom: 15px;
+  }
+
+  .info-card {
+    background: rgba(255,255,255,0.05);
+    padding: 12px;
+    border-radius: 12px;
+    margin: 8px 0;
+    text-align: right;
+    font-size: 0.95rem;
+  }
+
+  .info-item {
+    display: flex;
+    justify-content: space-between;
+    margin: 6px 0;
+  }
+
+  .info-label { color: var(--gray); font-weight: 500; }
+  .info-value { font-weight: 600; color: var(--light); }
+
+  .status-value.active { color: var(--success); font-weight: 700; }
+  .status-value.expired { color: var(--error); font-weight: 700; }
+
+  .timer {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--light);
+    margin-bottom: 4px;
+    letter-spacing: 2px;
+  }
+
+  .timer-labels {
+    font-size: 0.7rem;
+    color: var(--gray);
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 10px;
+  }
+
+  .progress-container {
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    height: 10px;
+    margin: 8px 0;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00ff99, #ffcc00, #ff4444);
+    transition: width 1s linear;
+  }
+
+  .logout-btn {
+    margin-top: 15px;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--error), #FF6B6B);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 600;
+    transition: 0.3s;
+  }
+
+  .logout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255,79,79,0.4);
+  }
+
+</style>
+</head>
+<body>
+
+<div class="profile-container">
+  <div class="profile-avatar" id="avatar">👤</div>
+  <h2 class="profile-name" id="name">-</h2>
+  <p class="profile-phone" id="section">-</p>
+
+  <div class="info-card">
+    <div class="info-item">
+      <span class="info-label">الكود:</span>
+      <span class="info-value" id="code">-</span>
+    </div>
+
+    <div class="info-item">
+      <span class="info-label">الحالة:</span>
+      <span id="status" class="status-value">-</span>
+    </div>
+
+    <div class="info-item">
+      <span class="info-label">تاريخ الانتهاء:</span>
+      <span class="info-value" id="end_date">-</span>
+    </div>
+  </div>
+
+  <div class="timer" id="timer">00:00:00:00</div>
+  <div class="timer-labels">
+    <span>أيام</span><span>ساعات</span><span>دقائق</span><span>ثواني</span>
+  </div>
+
+  <div class="progress-container">
+    <div class="progress-bar" id="progress"></div>
+  </div>
+
+  <button class="logout-btn" onclick="logout()">🚪 الرجوع للمواد</button>
+</div>
+
+<script>
+  // حماية الصفحة
+  let user = JSON.parse(localStorage.getItem("user_data") || "{}");
+  const code = localStorage.getItem("user_code");
+
+  if (!user || !code) {
+    window.location.href = "index.html";
+  }
+
+  // تحميل البيانات
+  document.getElementById("name").textContent = user.name || "-";
+  document.getElementById("section").textContent = user.section || "-";
+  document.getElementById("code").textContent = code;
+  document.getElementById("end_date").textContent = user.end_date || "-";
+  document.getElementById("avatar").textContent = user.name ? user.name[0] : "👤";
+
+  const statusEl = document.getElementById("status");
+  const timerEl = document.getElementById("timer");
+  const progress = document.getElementById("progress");
+
+  let expiry = new Date(user.end_date).getTime();
+  let start = expiry - 30 * 24 * 60 * 60 * 1000;
+
+  function updateTimer() {
+    const now = Date.now();
+    const distance = expiry - now;
+
+    if (distance <= 0) {
+      timerEl.textContent = "00:00:00:00";
+      statusEl.textContent = "❌ منتهي";
+      statusEl.className = "status-value expired";
+      progress.style.width = "0%";
+      return;
+    }
+
+    const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+    timerEl.textContent =
+      `${String(d).padStart(2,'0')} : ${String(h).padStart(2,'0')} : ${String(m).padStart(2,'0')} : ${String(s).padStart(2,'0')}`;
+
+    statusEl.textContent = "✅ نشط";
+    statusEl.className = "status-value active";
+
+    const percent = ((now - start) / (expiry - start)) * 100;
+    progress.style.width = Math.max(0, Math.min(100, 100 - percent)) + "%";
+  }
+
+  updateTimer();
+  setInterval(updateTimer, 1000);
+
+  // =====================================================
+  // 🔥 تحديث البيانات تلقائياً من السيرفر كل 20 ثانية
+  // =====================================================
+  async function refreshUserData() {
+    try {
+      const response = await fetch(
+        `https://script.google.com/macros/s/AKfycbxvLzKTlm_X51PGatqyiv1CPVm7W6uhKGeeCTKsSqOa3Dn9Rh9x5LU8t6zneTkCwRVz/exec?code=${code}`
+      );
+
+      const data = await response.json();
+
+      if (!data.success) return;
+
+      // لو البيانات اتغيرت فعلاً
+      if (
+        data.end_date !== user.end_date ||
+        data.name !== user.name ||
+        data.section !== user.section
+      ) {
+        // تحديث لوكال
+        localStorage.setItem("user_data", JSON.stringify(data));
+        user = data;
+
+        // تحديث العناصر
+        document.getElementById("name").textContent = user.name;
+        document.getElementById("section").textContent = user.section;
+        document.getElementById("end_date").textContent = user.end_date;
+        document.getElementById("avatar").textContent = user.name[0];
+
+        // تحديث الوقت
+        expiry = new Date(user.end_date).getTime();
+        start = expiry - 30 * 24 * 60 * 60 * 1000;
+      }
+    } catch (err) {
+      console.error("خطأ في تحديث البيانات:", err);
+    }
+  }
+
+  // تشغيل التحديث
+  setInterval(refreshUserData, 20000);
+
+  function logout() {
+    window.location.href = "subjects.html";
+  }
+
+</script>
+
+</body>
+</html>

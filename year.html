@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' /api/">
+  <title>السنوات الدراسية | THE BEST</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="secure-auth.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --card: #1a1a1a;
+      --accent: #ffd700;
+      --muted: #999;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: #fff;
+      padding-top: 75px;
+    }
+
+    /* ===== Top Bar ===== */
+    .topbar {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 60px;
+      background: rgba(15, 15, 15, .95);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+      z-index: 1000;
+      border-bottom: 1px solid #222;
+    }
+
+    /* ===== Title ===== */
+    h1 {
+      text-align: center;
+      margin: 30px 0 45px;
+      font-size: 2.2rem;
+    }
+
+    /* ===== Grid ===== */
+    .grid {
+      max-width: 1100px;
+      margin: auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 28px;
+    }
+
+    /* ===== Card ===== */
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 28px 20px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: .35s ease;
+      border: 1px solid #222;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* ===== Image ===== */
+    .icon {
+      width: 110px;
+      height: 110px;
+      margin: auto;
+      border-radius: 50%;
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .icon img {
+      width: 75%;
+      height: 75%;
+      object-fit: contain;
+    }
+
+    /* ===== Text ===== */
+    .year-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .year-meta {
+      margin-top: 8px;
+      font-size: .95rem;
+      color: var(--muted);
+    }
+
+    /* ===== Skeleton ===== */
+    .skeleton {
+      animation: pulse 1.5s infinite;
+    }
+
+    .skeleton .icon,
+    .skeleton .year-name,
+    .skeleton .year-meta {
+      background: #222;
+      color: transparent;
+      border-radius: 8px;
+    }
+
+    .skeleton .icon {
+      height: 110px;
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: .6
+      }
+
+      50% {
+        opacity: 1
+      }
+
+      100% {
+        opacity: .6
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">السنوات الدراسية</div>
+
+  <h1>اختر السنة</h1>
+
+  <div class="grid" id="grid">
+    <!-- Skeleton -->
+    <div class="card skeleton">
+      <div class="icon"></div>
+      <div class="year-name">----</div>
+      <div class="year-meta">----</div>
+    </div>
+    <div class="card skeleton">
+      <div class="icon"></div>
+      <div class="year-name">----</div>
+      <div class="year-meta">----</div>
+    </div>
+  </div>
+
+  <script>
+    const grid = document.getElementById("grid");
+
+    // Sanitize HTML to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Validate URL to prevent injection
+    function isValidImageUrl(url) {
+      if (!url) return false;
+      try {
+        const parsed = new URL(url);
+        return ['http:', 'https:'].includes(parsed.protocol);
+      } catch {
+        return false;
+      }
+    }
+
+    function createCard(year) {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const safeName = escapeHtml(year.name || "غير محدد");
+      const subjectCount = parseInt(year.subjects?.length) || 0;
+      const imageUrl = isValidImageUrl(year.image_url)
+        ? year.image_url
+        : 'https://img.icons8.com/ios-filled/100/ffd700/calendar.png';
+
+      card.innerHTML = `
+    <div class="icon">
+      <img src="${imageUrl}" alt="${safeName}" loading="lazy">
+    </div>
+    <div class="year-name">${safeName}</div>
+    <div class="year-meta">${subjectCount} مادة</div>
+  `;
+
+      card.onclick = () => {
+        sessionStorage.setItem("selected_year", JSON.stringify(year));
+        location.href = "subjects.html";
+      };
+
+      return card;
+    }
+
+    async function loadYears() {
+      // Verify session first
+      const isAuthenticated = await SecureAuth.protectPage("index.html");
+      if (!isAuthenticated) return;
+
+      // Start session monitoring
+      SecureAuth.startSessionMonitor(60000);
+
+      try {
+        // Use secure fetch through the API
+        const res = await SecureAuth.secureFetch("/api/proxy");
+
+        if (!res.ok) throw new Error("Failed to load data");
+
+        const data = await res.json();
+        grid.innerHTML = "";
+
+        if (Array.isArray(data)) {
+          data.forEach(y => grid.appendChild(createCard(y)));
+        } else {
+          throw new Error("Invalid data format");
+        }
+
+      } catch (err) {
+        console.error("Load error:", err.message);
+        grid.innerHTML = `<p style="text-align:center;color:#f55">فشل تحميل البيانات</p>`;
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener("DOMContentLoaded", loadYears);
+  </script>
+
+</body>
+
+</html>

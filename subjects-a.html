@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>المواد - منصة THE BEST</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: #121212;
+    color: #fff;
+    padding: 80px 15px 30px;
+    margin: 0;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ===== الشريط العلوي ===== */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #111;
+    padding: 10px 15px;
+    color: white;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1000;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .menu-btn {
+    font-size: 22px;
+    cursor: pointer;
+  }
+
+  .title {
+    font-size: 14px;
+    color: #f36;
+  }
+
+  .icons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .icons img {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+  }
+
+  .toggle-dark {
+    background: #fff;
+    border-radius: 12px;
+    width: 40px;
+    height: 20px;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .toggle-dark::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #111;
+    border-radius: 50%;
+    transition: 0.3s;
+  }
+
+  .toggle-dark.active::after {
+    left: 22px;
+    background: #ff0;
+  }
+
+  /* ===== باقي التنسيقات ===== */
+  h1 {
+    color: #ffd700;
+    text-align: center;
+    font-size: 2.8rem;
+    margin-bottom: 40px;
+    text-shadow: 0 0 8px #ffd700;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 30px;
+  }
+
+  li {
+    background: #1e1e1e;
+    border-radius: 16px;
+    padding: 20px 15px 30px;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(255, 215, 0, 0.15);
+    transition: background-color 0.3s ease, transform 0.25s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+  }
+
+  li:hover {
+    background: #ffd700;
+    color: #121212;
+    transform: translateY(-8px);
+    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.7);
+  }
+
+  li:active {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.5);
+  }
+
+  .circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #333;
+    overflow: hidden;
+    margin-bottom: 18px;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .circle img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+  }
+
+  li span {
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-align: center;
+  }
+
+  li.loading {
+    cursor: default;
+    color: #aaa;
+    background: transparent;
+    box-shadow: none;
+    font-weight: 400;
+    font-size: 1rem;
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+
+  li.loading::after {
+    content: "";
+    width: 28px;
+    height: 28px;
+    border: 3px solid #ffd700;
+    border-top: 3px solid transparent;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 10px;
+    vertical-align: middle;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ===== وضع الفاتح ===== */
+  body.light-mode {
+    background: #f5f5f5;
+    color: #000;
+  }
+  body.light-mode .topbar {
+    background: #fff;
+    color: #000;
+  }
+  body.light-mode li {
+    background: #fff;
+    color: #000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  }
+
+  /* ===== Toast إشعار ===== */
+  #toast {
+    visibility: hidden;
+    min-width: 260px;
+    background: #1e1e1e;
+    color: #ffd700;
+    text-align: center;
+    border-radius: 12px;
+    padding: 14px;
+    position: fixed;
+    z-index: 2000;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.5s, bottom 0.5s;
+  }
+  #toast.show {
+    visibility: visible;
+    opacity: 1;
+    bottom: 50px;
+  }
+  body.light-mode #toast {
+    background: #fff;
+    color: #333;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  /* ✅ زر البروفايل العائم */
+  .profile-float-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: #222;
+    border: 2px solid #ffd700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    transition: 0.3s;
+    z-index: 1200;
+  }
+  .profile-float-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(255,215,0,0.6);
+    background: #ffd700;
+  }
+  .profile-float-btn img {
+    width: 28px;
+    height: 28px;
+  }
+  body.light-mode .profile-float-btn {
+    background: #fff;
+    border: 2px solid #333;
+  }
+  body.light-mode .profile-float-btn:hover {
+    background: #333;
+    border-color: #ffd700;
+  }
+
+  @media (max-width: 480px) {
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 30px;
+    }
+    ul {
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 20px;
+      max-width: 100%;
+    }
+    .circle {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 14px;
+    }
+    li span {
+      font-size: 1rem;
+    }
+    .profile-float-btn {
+      width: 45px;
+      height: 45px;
+      bottom: 15px;
+      left: 15px;
+    }
+    .profile-float-btn img {
+      width: 22px;
+      height: 22px;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ✅ الشريط العلوي -->
+  <div class="topbar">
+    <div class="menu-btn">☰</div>
+    <div class="title">𝑷𝒍𝒂𝒕𝒇𝒐𝒓𝒎 𝑻𝒉𝒆 𝑩𝒆𝒔𝒕 𝟐𝟎𝟐𝟔</div>
+    <div class="icons">
+      <div class="toggle-dark" id="darkToggle"></div>
+      <!-- واتساب -->
+      <a href="" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" alt="WhatsApp">
+      </a>
+      <!-- مشاركة -->
+      <img id="shareBtn" src="https://cdn-icons-png.flaticon.com/512/929/929610.png" alt="Share">
+      <!-- إشعارات -->
+      <img id="notifyBtn" src="https://cdn-icons-png.flaticon.com/512/1827/1827272.png" alt="Notification">
+    </div>
+  </div>
+
+  <!-- ✅ Toast -->
+  <div id="toast">الإشعارات هتتفعل قريبًا 🔔✨</div>
+
+  <h1>𝑺𝒖𝒃𝒋𝒆𝒄𝒕𝒔 𝒄𝒍𝒂𝒔𝒔 𝒐𝒇 𝟐𝟎𝟐𝟔</h1>
+  <ul id="subjects-list">
+    <li class="loading">⏳....𝑳𝒐𝒂𝒅𝒊𝒏𝒈</li>
+  </ul>
+
+  <!-- ✅ زر بروفايل عائم -->
+  <a href="profile.html" class="profile-float-btn">
+    <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="بروفايل">
+  </a>
+
+ <script src="app.js"></script>  <!-- أو المسار المناسب للملف -->
+
+  <script src="check_code.js"></script>
+  
+<script>
+/* ================== IMAGES ================== */
+const subjectImages = {
+  "أحياء": "https://www2.0zz0.com/2025/11/03/16/425588580.jpg",
+  "فيزياء": "https://www2.0zz0.com/2025/11/03/16/155373686.jpg",
+  "كيمياء": "https://www2.0zz0.com/2025/11/03/16/286845048.jpg",
+  "تاريخ": "https://up6.cc/2025/10/176346425392421.png",
+  "جغرافيا": "https://g.top4top.io/p_3609sjes01.png",
+  "الإحصاء": "https://h.top4top.io/p_3609sxa941.png",
+  "لغة عربية": "https://www2.0zz0.com/2025/11/06/06/128992456.jpg",
+  "English": "https://www2.0zz0.com/2025/11/03/16/386429473.jpg",
+  "جيولوجيا": "https://www2.0zz0.com/2025/11/03/22/343667596.jpg",
+  "الرياضيات": "https://www2.0zz0.com/2025/11/03/22/428968592.jpg",
+  "ادبي": "https://www2.0zz0.com/2025/10/01/19/580067879.jpeg"
+};
+
+const subjectsList = document.getElementById("subjects-list");
+
+/* ================== STAGE SYSTEM (Coursatk) ================== */
+
+// السنة المختارة من الصفحة السابقة
+const selectedYear = JSON.parse(localStorage.getItem("selected_year"));
+
+if (!selectedYear) {
+  subjectsList.innerHTML =
+    `<li class="loading">❌ لم يتم اختيار سنة</li>`;
+} else {
+  loadSubjects();
+}
+
+/* ================== LOAD DATA ================== */
+
+async function loadSubjects() {
+  try {
+    const res = await fetch("./organized_output-a.json");
+    const data = await res.json();
+
+    const year = data.find(
+      y => y.id === selectedYear.id || y.name === selectedYear.name
+    );
+
+    if (!year) {
+      subjectsList.innerHTML =
+        `<li class="loading">❌ السنة غير موجودة</li>`;
+      return;
+    }
+
+    subjectsList.innerHTML = "";
+
+    year.subjects.forEach(subject => {
+  const li = document.createElement("li");
+
+  const circle = document.createElement("div");
+  circle.className = "circle";
+
+  const img = document.createElement("img");
+  img.src =
+    subjectImages[subject.name] ||
+    "https://img.icons8.com/ios-filled/100/ffd700/book.png";
+
+  circle.appendChild(img);
+
+  const span = document.createElement("span");
+  span.textContent = subject.name;
+
+  // إضافة عدد المدرسين لكل مادة
+  const info = document.createElement("div");
+  info.style.fontSize = "0.9rem";
+  info.style.color = "#ffd700";
+  info.style.marginTop = "6px";
+  info.textContent = `${subject.teachers?.length || 0} مدرس`;
+
+  li.append(circle, span, info);
+
+  // Stage التالي = Teachers
+  li.onclick = () => {
+    localStorage.setItem(
+      "selected_subject",
+      JSON.stringify(subject)
+    );
+    window.location.href = "teachers-a.html";
+  };
+
+  subjectsList.appendChild(li);
+});
+
+
+  } catch (e) {
+    console.error(e);
+    subjectsList.innerHTML =
+      `<li class="loading">❌ خطأ في قراءة الملف</li>`;
+  }
+}
+</script>
+
+</body>
+</html>
